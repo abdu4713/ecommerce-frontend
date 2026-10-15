@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 import { products } from "../assets/assets";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -6,13 +6,16 @@ import { useNavigate } from "react-router-dom";
 
 export const ShopContext = createContext();
 
-const ShopContextProvider = (props) => {
+const ShopContextProvider = ({ children }) => {
 
     const currency = '$';
     const delivery_fee = 10;
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
-    const [cartItems, setCartItems] = useState({});
+    const [cartItems, setCartItems] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('abdusfashions_cart') || '{}'); }
+        catch { return {}; }
+    });
 
     const navigate = useNavigate()
 
@@ -38,23 +41,13 @@ const ShopContextProvider = (props) => {
             cartData[itemId][size] = 1;
         }
         setCartItems(cartData);
+        localStorage.setItem('abdusfashions_cart', JSON.stringify(cartData));
     }
 
-    const getCartCount = () => {
-        let totalCount = 0;
-        for (const items in cartItems) {
-            for (const item in cartItems[items]) {
-                try {
-                    if (cartItems[items][item] > 0) {
-                        totalCount += cartItems[items][item];
-                    }
-                } catch (error) {
-
-                }
-            }
-        }
-        return totalCount;
-    }
+    const getCartCount = () => Object.values(cartItems).reduce(
+        (total, sizes) => total + Object.values(sizes).reduce((sum, quantity) => sum + Math.max(0, quantity), 0),
+        0
+    );
 
     const updateQuantity = async (itemId, size, quantity) => {
         let cartData = structuredClone(cartItems);
@@ -62,38 +55,28 @@ const ShopContextProvider = (props) => {
         cartData[itemId][size] = quantity;
 
         setCartItems(cartData);
+        localStorage.setItem('abdusfashions_cart', JSON.stringify(cartData));
     }
 
-    const getCartAmount =  () =>{
-        let totalAmount = 0;
-        for (const items in cartItems) {
-           let itemInfo = products.find((product)=> product._id === items);
-           for (const  item in cartItems[items]) {
-         try {
-            if (cartItems[items][item] > 0) {
-                totalAmount += itemInfo.price * cartItems[items][item]
-            }
-         } catch (error) {
-            
-         }
-            
-           }
-            
-        }
-        return totalAmount;
-    }
+    const getCartAmount = () => Object.entries(cartItems).reduce((total, [itemId, sizes]) => {
+        const product = products.find((item) => item._id === itemId);
+        if (!product) return total;
+        const quantity = Object.values(sizes).reduce((sum, count) => sum + Math.max(0, count), 0);
+        return total + product.price * quantity;
+    }, 0);
 
     const value = {
         products, currency, delivery_fee,
         search, setSearch, showSearch, setShowSearch,
         cartItems, addToCart, getCartCount, updateQuantity,
-        getCartAmount,navigate
+        getCartAmount,navigate,
+        clearCart: () => { setCartItems({}); localStorage.removeItem('abdusfashions_cart'); }
 
     }
 
     return (
         <ShopContext.Provider value={value}>
-            {props.children}
+            {children}
         </ShopContext.Provider>
     )
 }

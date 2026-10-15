@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import Title from './Title';
 import ProductItem from './ProductItem';
@@ -18,7 +18,7 @@ setBestSeller(bestproduct.slice(0,5))
     <div className='my-10'>
         <div className="text-center text-3xl py-8">
             <Title text1={'Best'} text2={'Sellers'} />
-            <p className="w-3/4 m-auto text-xs md:text-base trxt-gray-600">
+            <p className="w-3/4 m-auto text-xs md:text-base text-gray-600">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum amet, ab commodi sunt veritatis enim quisquam veniam aliquam nemo, praesentium, odio possimus itaque eum eos quos est asperiores maiores placeat.
             </p>
         </div>
